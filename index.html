@@ -97,7 +97,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 
 .move-extra{margin-top:12px;display:grid;gap:10px}.move-extra-row{background:#f7f9fc;border:1px solid #e3e8f0;border-radius:10px;padding:10px 12px}.move-extra-label{font-size:.78rem;font-weight:800;color:#5b6574;margin-bottom:5px}.move-extra-text{line-height:1.65;color:#202631}.move-tags{display:flex;flex-wrap:wrap;gap:6px}.move-tag{display:inline-flex;align-items:center;min-height:24px;padding:2px 10px;border-radius:999px;background:#e9edf3;border:1px solid #d4dae4;color:#303744;font-size:.78rem;font-weight:800;white-space:nowrap}.move-tag.important{background:#fff4d8;border-color:#efd28a;color:#664b00}.move-tag.ability{background:#e9f3ff;border-color:#bad6f5;color:#164e86}.move-note{font-size:.75rem;color:#6b7280;margin-top:8px;line-height:1.5}
 .move-tag.defense{border-color:#8b5cf6;background:rgba(139,92,246,.12)}
-.move-category{display:inline-flex;align-items:center;justify-content:center;min-width:48px;padding:2px 8px;border-radius:999px;background:#eef1f5;border:1px solid #d8dde5;color:#303744;font-size:.72rem;font-weight:800;line-height:1.25;white-space:nowrap}.move-button-main{display:flex;align-items:center;gap:8px;min-width:0}.move-name{min-width:0}.move-button .move-type{margin-left:auto}.move-group.all-moves h3{justify-content:space-between}
+.move-category{display:inline-flex;align-items:center;justify-content:center;min-width:48px;padding:2px 8px;border-radius:999px;background:#eef1f5;border:1px solid #d8dde5;color:#303744;font-size:.72rem;font-weight:800;line-height:1.25;white-space:nowrap}.move-button{justify-content:flex-start;gap:8px}.move-name{flex:0 0 13em;min-width:0;font-weight:700}.move-button .move-type{margin-left:0}.move-group.all-moves h3{justify-content:space-between}@media(max-width:600px){.move-name{flex-basis:9.5em}.move-button{gap:6px;padding-left:10px;padding-right:10px}.move-category{min-width:44px;padding-left:6px;padding-right:6px}.move-type.type-badge{min-width:52px;padding-left:7px;padding-right:7px}}
 </style>
 </head>
 <body>
@@ -674,7 +674,7 @@ function moveListHtml(items){
   if(!items.length)return "";
   return `<div class="move-group all-moves"><h3><span>【技一覧】</span><span>${items.length}個</span></h3><ul class="move-list">${
     items.map(({name,info})=>`<li class="move-item">
-      <button class="move-button" type="button" aria-expanded="false"><span class="move-button-main"><span class="move-name">${name}</span><span class="move-category">【${info.category}】</span></span>${typeBadge(info.type,"move-type")}</button>
+      <button class="move-button" type="button" aria-expanded="false"><span class="move-name">${name}</span><span class="move-category">【${info.category}】</span>${typeBadge(info.type,"move-type")}</button>
       <div class="move-detail"><div class="move-specs">
         <div class="move-spec"><div class="label">タイプ</div><div>${typeBadge(info.type)}</div></div>
         <div class="move-spec"><div class="label">分類</div><div>${info.category}</div></div>
