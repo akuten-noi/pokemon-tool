@@ -171,7 +171,17 @@ const listEl=document.getElementById("list"),detailEl=document.getElementById("d
 function hiraToKata(v){return String(v||"").replace(/[ぁ-ゖ]/g,ch=>String.fromCharCode(ch.charCodeAt(0)+0x60))}
 function norm(v){return hiraToKata(String(v||"").normalize("NFKC").toLowerCase()).replace(/[\s・ー_\-（）()]/g,"")}
 function searchable(p){return p.name}
-function filtered(){const q=norm(query);return POKEMON.filter(p=>(!typeFilter||p.types.includes(typeFilter))&&(!q||norm(p.name).includes(q)))}
+function filtered(){
+  const q=norm(query);
+  const mons=POKEMON.filter(p=>(!typeFilter||p.types.includes(typeFilter))&&(!q||norm(p.name).includes(q)));
+  if(!q)return mons;
+  return mons.map((p,index)=>{
+    const name=norm(p.name);
+    const isMega=p.name.startsWith("メガ");
+    const rank=(!isMega&&name.startsWith(q))?0:(isMega&&name.startsWith(q))?2:1;
+    return {p,index,rank};
+  }).sort((a,b)=>a.rank-b.rank||a.index-b.index).map(x=>x.p);
+}
 function calcSpeed(base,ev,nature){const raw=Math.floor(((2*base+31+Math.floor(ev/4))*50)/100)+5;return Math.floor(raw*nature)}
 function speeds(base){return [["最速",calcSpeed(base,252,1.1)],["準速",calcSpeed(base,252,1)],["無振り",calcSpeed(base,0,1)],["最遅",calcSpeed(base,0,.9)]]}
 function renderList(){const mons=filtered();if(!mons.length){listEl.innerHTML='<div class="empty">該当するポケモンがいません</div>';detailEl.innerHTML='<div class="empty">検索条件を変更してください。</div>';return}if(!mons.some(p=>p.name===selected))selected=mons[0].name;listEl.innerHTML=mons.map(p=>`<button class="mon-btn ${p.name===selected?"active":""}" data-name="${p.name}"><span>${p.name}</span><span class="dex">No.${p.dex}</span></button>`).join("");listEl.querySelectorAll(".mon-btn").forEach(b=>b.addEventListener("click",()=>{selected=b.dataset.name;moveQuery="";render();if(innerWidth<801)detailEl.scrollIntoView({behavior:"smooth"})}))}
