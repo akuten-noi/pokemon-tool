@@ -751,8 +751,8 @@ function renderDetail(){
   const sortedMoves=sortMovesAiueo(shown);
   detailEl.innerHTML=`<div class="head"><div><h2 class="name">${p.name}</h2><div class="chips">${p.types.map(t=>typeBadge(t,"chip")).join("")}</div></div><span class="dex">No.${p.dex}</span></div>
   ${matchupHtml(p.types)}
-  <section class="section"><h2>能力値</h2><div class="stats">${Object.entries(p.stats).map(([k,v])=>`<div class="stat"><div class="label">${statLabels[k]}</div><div class="value">${p.name==="ヌケニン"&&k==="hp"?1:v+(k==="hp"?75:20)}</div></div>`).join("")}<div class="stat total"><div class="label">合計</div><div class="value">${Object.entries(p.stats).reduce((sum,[k,v])=>sum+(p.name==="ヌケニン"&&k==="hp"?1:v+(k==="hp"?75:20)),0)}</div></div></div></section>
-  <section class="section"><h2>素早さ</h2><p class="help">レベル50・個体値31想定。括弧内：こだわりスカーフ持ち時</p><div class="speed-grid">${speeds(p.stats.spe).map(([l,v])=>`<div class="speed"><div class="label">${l}</div><div class="value">${v}（${Math.floor(v*1.5)}）</div></div>`).join("")}</div></section>
+  <section class="section"><h2>能力値</h2><div class="stats">${Object.entries(p.stats).map(([k,v])=>`<div class="stat"><div class="label">${statLabels[k]}</div><div class="value">${p.name==="ヌケニン"&&k==="hp"?1:v+(k==="hp"?75:20)}</div></div>`).join("")}</div></section>
+  <section class="section"><h2>素早さ（こだわりスカーフ持ち時）</h2><div class="speed-grid">${speeds(p.stats.spe).map(([l,v])=>`<div class="speed"><div class="label">${l}</div><div class="value">${v}（${Math.floor(v*1.5)}）</div></div>`).join("")}</div></section>
   <section class="section"><h2>特性</h2><p class="help">特性名をタップすると、対戦向けの効果と必要な補足を表示します。</p><div class="abilities">${p.abilities.map(a=>`
     <div class="ability-item">
       <button class="ability-button" type="button" aria-expanded="false">
