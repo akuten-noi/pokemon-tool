@@ -1199,8 +1199,14 @@ function damageCalcHtml(pagePokemon){
   const move=moveMeta(damageState.move);
   const physical=move.category==="物理";
   const atkKey=physical?"atk":"spa",defKey=physical?"def":"spd";
-  let atkValue=Math.floor(finalStat(attacker,atkKey,damageState.atkPoints,damageState.atkCorrection)*rankMultiplier(Number(damageState.atkBoost)));
-  let defValue=Math.max(1,Math.floor(finalStat(defender,defKey,damageState.defPoints,damageState.defCorrection)*rankMultiplier(Number(damageState.defBoost))));
+  // 急所時は、攻撃側の攻撃・特攻ダウンと、防御側の防御・特防アップを無視する。
+  // 攻撃側のプラス補正、防御側のマイナス補正は通常どおり反映する。
+  const selectedAtkRank=Number(damageState.atkBoost);
+  const selectedDefRank=Number(damageState.defBoost);
+  const effectiveAtkRank=damageState.critical&&selectedAtkRank<0?0:selectedAtkRank;
+  const effectiveDefRank=damageState.critical&&selectedDefRank>0?0:selectedDefRank;
+  let atkValue=Math.floor(finalStat(attacker,atkKey,damageState.atkPoints,damageState.atkCorrection)*rankMultiplier(effectiveAtkRank));
+  let defValue=Math.max(1,Math.floor(finalStat(defender,defKey,damageState.defPoints,damageState.defCorrection)*rankMultiplier(effectiveDefRank)));
   const hp=finalStat(defender,"hp",damageState.defHpPoints,"none");
   const power=Number(move.power||0);
   if(physical&&damageState.attackerItem==="choiceBand")atkValue=Math.floor(atkValue*1.5);
@@ -1235,7 +1241,8 @@ function damageCalcHtml(pagePokemon){
   if(damageState.attackerItem==="expertBelt"&&effectiveness>1)field*=1.2;
   if(damageState.attackerItem==="typeBoost")field*=1.2;
   if(damageState.defenderItem==="resistBerry"&&effectiveness>1)field*=0.5;
-  const crit=damageState.critical?1.5:1;
+  // 通常の急所は1.5倍。特性「スナイパー」は急所ダメージをさらに1.5倍し、合計2.25倍。
+  const crit=damageState.critical?(damageState.attackerAbility==="スナイパー"?2.25:1.5):1;
   const immune=abilityImmunity(damageState.defenderAbility,move.type)||(damageState.terrain==="psychic"&&defenderGrounded&&Number(move.priority||0)>0);
   const base=power?Math.floor(Math.floor(Math.floor((22*power*atkValue)/defValue)/50)+2):0;
   const rolls=Array.from({length:16},(_,i)=>immune?0:Math.floor(base*stab*effectiveness*field*crit*(85+i)/100));
@@ -1306,12 +1313,12 @@ function damageCalcHtml(pagePokemon){
       </div>
       <div class="damage-section-label">その他</div><div class="damage-options">
         <label class="damage-check"><input data-damage="gravity" type="checkbox" ${damageState.gravity?"checked":""}>じゅうりょく</label>
-        <label class="damage-check"><input data-damage="critical" type="checkbox" ${damageState.critical?"checked":""}>急所</label>
+        <label class="damage-check"><input data-damage="critical" type="checkbox" ${damageState.critical?"checked":""}>急所（1.5倍${damageState.attackerAbility==="スナイパー"?"／スナイパー時2.25倍":""}）</label>
         <label class="damage-check"><input data-damage="helpingHand" type="checkbox" ${damageState.helpingHand?"checked":""}>てだすけ</label>
         <label class="damage-check"><input data-damage="spread" type="checkbox" ${damageState.spread?"checked":""}>全体技補正（0.75倍）</label>
         <label class="damage-check"><input data-damage="reflect" type="checkbox" ${damageState.reflect?"checked":""}>${physical?"リフレクター":"ひかりのかべ"}</label>
         <label class="damage-check"><input data-damage="burn" type="checkbox" ${damageState.burn?"checked":""}>やけど（物理技0.5倍）</label>
-      </div><div class="choice-help">じゅうりょく／くろいてっきゅう：ひこうタイプ・特性「ふゆう」にも、じめんタイプの技が当たります。</div>
+      </div><div class="choice-help">じゅうりょく／くろいてっきゅう：ひこうタイプ・特性「ふゆう」にも、じめんタイプの技が当たります。<br>急所：通常1.5倍。特性「スナイパー」では2.25倍。攻撃側の攻撃・特攻ダウン、防御側の防御・特防アップ、リフレクター・ひかりのかべを無視します。やけどによる物理技半減は無視しません。</div>
     </div>
     <div class="damage-result">
       <div class="damage-result-main">${damageState.move}：${min}～${max}ダメージ</div>
@@ -1322,7 +1329,7 @@ function damageCalcHtml(pagePokemon){
         <div class="damage-result-cell"><span class="label">攻撃前</span><strong>${hpBeforeAttack}/${hp}</strong></div>
       </div>
       <div class="hp-gauge"><div class="hp-gauge-fill ${gaugeClass}" style="width:${Math.max(0,Math.min(100,remainWorstPct))}%"></div><div class="hp-gauge-text">残りHP ${remainWorstPct.toFixed(1)}～${remainBestPct.toFixed(1)}%（${remainWorst}～${remainBest}/${hp}）</div></div>
-      <div class="damage-note">${entryText}<br>乱数：${rolls.join(", ")}<br>能力ポイントは各能力0～32、合計66。主要な場・特性・持ち物補正を反映します。</div>
+      <div class="damage-note">${entryText}<br>乱数：${rolls.join(", ")}<br>${damageState.critical?`急所補正：${damageState.attackerAbility==="スナイパー"?"2.25倍（スナイパー）":"1.5倍"}。攻撃側のマイナス能力ランク、防御側のプラス能力ランク、壁を無視。<br>`:""}能力ポイントは各能力0～32、合計66。主要な場・特性・持ち物補正を反映します。</div>
     </div>
   </section>`;
 }
