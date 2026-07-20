@@ -280,8 +280,22 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 .damage-bar{height:12px;border-radius:999px;background:#e5eaf2;overflow:hidden;margin-top:8px}
 .damage-bar>span{display:block;height:100%;background:#2f67d8;width:0}
 .damage-note{margin-top:6px;color:var(--muted);font-size:.68rem;line-height:1.45}
-@media(max-width:800px){.damage-columns{grid-template-columns:1fr}.damage-options{grid-template-columns:repeat(2,minmax(0,1fr))}.damage-side-head{grid-template-columns:minmax(0,1fr) minmax(230px,.95fr)}}
-@media(max-width:520px){.detail-tabs{gap:2px}.detail-tab{font-size:.68rem;padding:6px 1px}.damage-field{grid-template-columns:82px minmax(0,1fr)}.point-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.damage-result-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.damage-side-head{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:5px}.damage-base-stats-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.damage-base-stat{padding:3px 1px}.damage-base-stat .label{font-size:.52rem}.damage-base-stat strong{font-size:.67rem}}
+
+.item-help{margin:-2px 0 7px 94px;font-size:.64rem;line-height:1.4;color:var(--muted)}
+.damage-side-head{display:flex;flex-direction:column;gap:7px}
+.damage-side-head .damage-base-stats{order:0;width:100%}
+.damage-side-head .damage-field{order:1;width:100%}
+.damage-result{position:sticky;bottom:8px;z-index:30;box-shadow:0 -3px 18px rgba(20,40,80,.16);backdrop-filter:blur(5px)}
+.damage-calculator{padding-bottom:10px}
+.hp-gauge{position:relative;height:24px;border:2px solid #29313d;border-radius:6px;background:#202733;overflow:hidden;margin-top:9px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+.hp-gauge-fill{height:100%;width:100%;transition:width .2s ease;background:#45b84c}
+.hp-gauge-fill.hp-yellow{background:#e5c42f}.hp-gauge-fill.hp-red{background:#e14a42}
+.hp-gauge-text{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:.72rem;font-weight:900;text-shadow:0 1px 2px #000;white-space:nowrap}
+.hazard-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:5px}
+.hazard-select{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:6px 8px;font-size:.7rem}.hazard-select select{padding:5px;min-width:0}
+@media(max-width:800px){.damage-columns{grid-template-columns:1fr}.damage-options{grid-template-columns:repeat(2,minmax(0,1fr))}.damage-result{bottom:4px}.hazard-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.detail-tabs{gap:2px}.detail-tab{font-size:.68rem;padding:6px 1px}.damage-field{grid-template-columns:82px minmax(0,1fr)}.point-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.damage-result-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.damage-side-head{gap:7px}.damage-side-head .damage-field{width:100%}.damage-side-head select{width:100%;min-width:0}.damage-base-stats{width:100%}.damage-base-stats-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.damage-base-stat{padding:3px 1px}.damage-base-stat .label{font-size:.52rem}.damage-base-stat strong{font-size:.67rem}.item-help{margin:-2px 0 7px 82px}.damage-result{padding:8px}.damage-result-main{font-size:.9rem}.damage-note{max-height:54px;overflow:auto}.hazard-grid{grid-template-columns:1fr}}
+
 
 .controls{flex-wrap:wrap}
 .damage-page-toggle{font-weight:900}
@@ -409,7 +423,7 @@ POKEMON.sort((a,b)=>{
 });
 let selected=POKEMON[0]?.name||"",query="",moveQuery="",listOpen=false,viewMode="database";
 let activeDetailTab="overview";
-let damageState={attacker:POKEMON[0]?.name||"",defender:POKEMON[1]?.name||POKEMON[0]?.name||"",move:"",atkPoints:0,defHpPoints:0,defPoints:0,atkBoost:0,defBoost:0,atkCorrection:"none",defCorrection:"none",attackerAbility:"",defenderAbility:"",attackerItem:"none",defenderItem:"none",weather:"none",terrain:"none",gravity:false,critical:false,helpingHand:false,spread:false,reflect:false};
+let damageState={attacker:POKEMON[0]?.name||"",defender:POKEMON[1]?.name||POKEMON[0]?.name||"",move:"",atkPoints:0,defHpPoints:0,defPoints:0,atkBoost:0,defBoost:0,atkCorrection:"none",defCorrection:"none",attackerAbility:"",defenderAbility:"",attackerItem:"none",defenderItem:"none",weather:"none",terrain:"none",gravity:false,critical:false,helpingHand:false,spread:false,reflect:false,burn:false,stealthRock:false,spikes:0};
 const layoutEl=document.getElementById("layout"),listEl=document.getElementById("list"),detailEl=document.getElementById("detail"),searchEl=document.getElementById("search"),listToggleEl=document.getElementById("listToggle"),damagePageToggleEl=document.getElementById("damagePageToggle");
 function hiraToKata(v){return String(v||"").replace(/[ぁ-ゖ]/g,ch=>String.fromCharCode(ch.charCodeAt(0)+0x60))}
 function norm(v){return hiraToKata(String(v||"").normalize("NFKC").toLowerCase()).replace(/[\s・ー_\-（）()]/g,"")}
@@ -1111,26 +1125,37 @@ function correctionOptions(selected){
   return Object.entries(labels).map(([v,l])=>`<option value="${v}" ${selected===v?"selected":""}>${l}</option>`).join("");
 }
 const DAMAGE_ITEMS={
-  none:"なし",choiceBand:"こだわりハチマキ",choiceSpecs:"こだわりメガネ",lifeOrb:"いのちのたま",
-  muscleBand:"ちからのハチマキ",wiseGlasses:"ものしりメガネ",assaultVest:"とつげきチョッキ",
-  expertBelt:"たつじんのおび",metronome:"メトロノーム（未加算）"
+  none:{name:"なし",help:"持ち物による補正なし"},
+  choiceBand:{name:"こだわりハチマキ",help:"物理技に使う攻撃が1.5倍"},
+  choiceSpecs:{name:"こだわりメガネ",help:"特殊技に使う特攻が1.5倍"},
+  lifeOrb:{name:"いのちのたま",help:"技のダメージが1.3倍"},
+  muscleBand:{name:"ちからのハチマキ",help:"物理技のダメージが1.1倍"},
+  wiseGlasses:{name:"ものしりメガネ",help:"特殊技のダメージが1.1倍"},
+  expertBelt:{name:"たつじんのおび",help:"効果抜群の技のダメージが1.2倍"},
+  typeBoost:{name:"タイプ強化1.2倍",help:"選択中のタイプ技のダメージが1.2倍（かたいいし・きせきのタネなど）"},
+  lightBall:{name:"でんきだま",help:"ピカチュウが持つと攻撃と特攻が2倍"},
+  resistBerry:{name:"きのみ（半減）",help:"効果抜群の技を受けるとダメージを0.5倍（イトケのみ・オッカのみなど）"},
+  ironBall:{name:"くろいてっきゅう",help:"ひこうタイプ・特性「ふゆう」でもじめん技が当たり、地面にいる扱い"},
+  metronome:{name:"メトロノーム",help:"連続使用回数による補正は未対応"}
 };
 function itemOptions(selected,side){
-  const allowed=side==="atk"?["none","choiceBand","choiceSpecs","lifeOrb","muscleBand","wiseGlasses","expertBelt","metronome"]:["none","assaultVest"];
-  return allowed.map(v=>`<option value="${v}" ${selected===v?"selected":""}>${DAMAGE_ITEMS[v]}</option>`).join("");
+  const allowed=side==="atk"?["none","choiceBand","choiceSpecs","lifeOrb","muscleBand","wiseGlasses","expertBelt","typeBoost","lightBall","metronome"]:["none","resistBerry","ironBall"];
+  if(!allowed.includes(selected))selected="none";
+  return allowed.map(v=>`<option value="${v}" ${selected===v?"selected":""}>${DAMAGE_ITEMS[v].name}</option>`).join("");
 }
+function itemHelp(key){return (DAMAGE_ITEMS[key]||DAMAGE_ITEMS.none).help}
 function abilityOptions(p,selected){
   const list=["なし",...(p.abilities||[])];
   return list.map(v=>`<option value="${v}" ${selected===v?"selected":""}>${v}</option>`).join("");
 }
-function isGrounded(p,ability,gravity){return gravity||(!p.types.map(typeKey).includes("Flying")&&ability!=="ふゆう")}
-function typeMultiplierForDamage(moveType,defender,defAbility,gravity){
+function isGrounded(p,ability,gravity,item="none"){return gravity||item==="ironBall"||(!p.types.map(typeKey).includes("Flying")&&ability!=="ふゆう")}
+function typeMultiplierForDamage(moveType,defender,defAbility,gravity,defItem="none"){
   const atk=typeKey(moveType);
-  if(atk==="Ground"&&defAbility==="ふゆう"&&!gravity)return 0;
+  if(atk==="Ground"&&defAbility==="ふゆう"&&!gravity&&defItem!=="ironBall")return 0;
   let m=1;
   defender.types.forEach(t=>{
     const dt=typeKey(t);
-    if(atk==="Ground"&&dt==="Flying"&&gravity)m*=1;
+    if(atk==="Ground"&&dt==="Flying"&&(gravity||defItem==="ironBall"))m*=1;
     else m*=((TYPE_CHART[atk]||{})[dt]??1);
   });
   return m;
@@ -1167,6 +1192,10 @@ function damageCalcHtml(pagePokemon){
   const defender=POKEMON.find(p=>p.name===damageState.defender)||POKEMON[0];
   if(!["なし",...(attacker.abilities||[])].includes(damageState.attackerAbility))damageState.attackerAbility=attacker.abilities?.[0]||"なし";
   if(!["なし",...(defender.abilities||[])].includes(damageState.defenderAbility))damageState.defenderAbility=defender.abilities?.[0]||"なし";
+  const atkAllowed=["none","choiceBand","choiceSpecs","lifeOrb","muscleBand","wiseGlasses","expertBelt","typeBoost","lightBall","metronome"];
+  const defAllowed=["none","resistBerry","ironBall"];
+  if(!atkAllowed.includes(damageState.attackerItem))damageState.attackerItem="none";
+  if(!defAllowed.includes(damageState.defenderItem))damageState.defenderItem="none";
   const move=moveMeta(damageState.move);
   const physical=move.category==="物理";
   const atkKey=physical?"atk":"spa",defKey=physical?"def":"spd";
@@ -1176,12 +1205,12 @@ function damageCalcHtml(pagePokemon){
   const power=Number(move.power||0);
   if(physical&&damageState.attackerItem==="choiceBand")atkValue=Math.floor(atkValue*1.5);
   if(!physical&&damageState.attackerItem==="choiceSpecs")atkValue=Math.floor(atkValue*1.5);
-  if(!physical&&damageState.defenderItem==="assaultVest")defValue=Math.floor(defValue*1.5);
+  if(damageState.attackerItem==="lightBall"&&attacker.name==="ピカチュウ")atkValue=Math.floor(atkValue*2);
   if(damageState.weather==="sand"&&!physical&&defender.types.map(typeKey).includes("Rock"))defValue=Math.floor(defValue*1.5);
   if(damageState.weather==="snow"&&physical&&defender.types.map(typeKey).includes("Ice"))defValue=Math.floor(defValue*1.5);
-  const attackerGrounded=isGrounded(attacker,damageState.attackerAbility,damageState.gravity);
-  const defenderGrounded=isGrounded(defender,damageState.defenderAbility,damageState.gravity);
-  const effectiveness=typeMultiplierForDamage(move.type,defender,damageState.defenderAbility,damageState.gravity);
+  const attackerGrounded=isGrounded(attacker,damageState.attackerAbility,damageState.gravity,damageState.attackerItem);
+  const defenderGrounded=isGrounded(defender,damageState.defenderAbility,damageState.gravity,damageState.defenderItem);
+  const effectiveness=typeMultiplierForDamage(move.type,defender,damageState.defenderAbility,damageState.gravity,damageState.defenderItem);
   let stab=attacker.types.map(typeKey).includes(typeKey(move.type))?1.5:1;
   if(damageState.attackerAbility==="てきおうりょく"&&stab>1)stab=2;
   let field=1;
@@ -1197,31 +1226,50 @@ function damageCalcHtml(pagePokemon){
   if(damageState.helpingHand)field*=1.5;
   if(damageState.spread)field*=0.75;
   if(damageState.reflect&&!damageState.critical)field*=0.5;
+  if(damageState.burn&&physical)field*=0.5;
   field*=offensiveAbilityMultiplier(damageState.attackerAbility,damageState.move,move,power);
   field*=defensiveAbilityMultiplier(damageState.defenderAbility,move.type,effectiveness);
   if(damageState.attackerItem==="lifeOrb")field*=1.3;
   if(damageState.attackerItem==="muscleBand"&&physical)field*=1.1;
   if(damageState.attackerItem==="wiseGlasses"&&!physical)field*=1.1;
   if(damageState.attackerItem==="expertBelt"&&effectiveness>1)field*=1.2;
+  if(damageState.attackerItem==="typeBoost")field*=1.2;
+  if(damageState.defenderItem==="resistBerry"&&effectiveness>1)field*=0.5;
   const crit=damageState.critical?1.5:1;
   const immune=abilityImmunity(damageState.defenderAbility,move.type)||(damageState.terrain==="psychic"&&defenderGrounded&&Number(move.priority||0)>0);
   const base=power?Math.floor(Math.floor(Math.floor((22*power*atkValue)/defValue)/50)+2):0;
   const rolls=Array.from({length:16},(_,i)=>immune?0:Math.floor(base*stab*effectiveness*field*crit*(85+i)/100));
+
+  let entryDamage=0;
+  if(damageState.stealthRock){
+    const rockEff=typeMultiplierForDamage("いわ",defender,"なし",false,"none");
+    entryDamage+=Math.floor(hp*rockEff/8);
+  }
+  const spikes=Number(damageState.spikes||0);
+  if(spikes>0&&defenderGrounded){
+    entryDamage+=Math.floor(hp*(spikes===1?1/8:spikes===2?1/6:1/4));
+  }
+  entryDamage=Math.min(hp,entryDamage);
+  const hpBeforeAttack=Math.max(0,hp-entryDamage);
   const min=Math.min(...rolls),max=Math.max(...rolls),minPct=hp?min/hp*100:0,maxPct=hp?max/hp*100:0;
-  const ko=max===0?"ダメージなし":min>=hp?"確定1発":max>=hp?`乱数1発（${(rolls.filter(x=>x>=hp).length/16*100).toFixed(1)}%）`:min*2>=hp?"確定2発":max*2>=hp?"乱数2発":"確定3発以上";
+  const remainWorst=Math.max(0,hpBeforeAttack-max),remainBest=Math.max(0,hpBeforeAttack-min);
+  const remainWorstPct=hp?remainWorst/hp*100:0,remainBestPct=hp?remainBest/hp*100:0;
+  const ko=max===0?"ダメージなし":min>=hpBeforeAttack?"確定1発":max>=hpBeforeAttack?`乱数1発（${(rolls.filter(x=>x>=hpBeforeAttack).length/16*100).toFixed(1)}%）`:min*2>=hpBeforeAttack?"確定2発":max*2>=hpBeforeAttack?"乱数2発":"確定3発以上";
   const defenderUsed=Number(damageState.defHpPoints)+Number(damageState.defPoints);
   const typeText=effectiveness===0?"無効":effectiveness===.25?"0.25倍":effectiveness===.5?"0.5倍":effectiveness===2?"2倍":effectiveness===4?"4倍":"等倍";
   const weatherHelp={none:"天候補正なし",sun:"ほのお技1.5倍／みず技0.5倍",rain:"みず技1.5倍／ほのお技0.5倍",sand:"いわタイプの特防1.5倍",snow:"こおりタイプの防御1.5倍"}[damageState.weather];
+  const gaugeClass=remainWorstPct<=20?"hp-red":remainWorstPct<=50?"hp-yellow":"";
+  const entryText=entryDamage?`場のダメージ：${entryDamage}（攻撃前HP ${hpBeforeAttack}/${hp}）`:`攻撃前HP：${hp}/${hp}`;
   return `<section class="damage-calculator">
     <div class="damage-columns">
       <div class="damage-card"><h2>攻撃側</h2>
         <div class="damage-side-head">
-          <div class="damage-field"><label>ポケモン</label><select data-damage="attacker">${POKEMON.map(x=>`<option value="${x.name}" ${x.name===attacker.name?"selected":""}>${x.name}</option>`).join("")}</select></div>
           ${damageBaseStatsHtml(attacker)}
+          <div class="damage-field"><label>ポケモン</label><select data-damage="attacker">${POKEMON.map(x=>`<option value="${x.name}" ${x.name===attacker.name?"selected":""}>${x.name}</option>`).join("")}</select></div>
         </div>
         <div class="damage-field"><label>使用する技</label><select data-damage="move">${sortMovesByType(attacker.moves).map(({name,info})=>`<option value="${name}" ${name===damageState.move?"selected":""}>${name}（${info.type}・${info.category}）</option>`).join("")}</select></div>
         <div class="damage-field"><label>特性</label><select data-damage="attackerAbility">${abilityOptions(attacker,damageState.attackerAbility)}</select></div>
-        <div class="damage-field"><label>持ち物</label><select data-damage="attackerItem">${itemOptions(damageState.attackerItem,"atk")}</select></div>
+        <div class="damage-field"><label>持ち物</label><select data-damage="attackerItem">${itemOptions(damageState.attackerItem,"atk")}</select></div><div class="item-help">${itemHelp(damageState.attackerItem)}</div>
         <div class="damage-field"><label>能力ポイント</label><div><input data-damage="atkPoints" type="range" min="0" max="32" value="${damageState.atkPoints}"><div class="range-value">${damageState.atkPoints} / 32</div></div></div>
         <div class="damage-field"><label>能力補正</label><select data-damage="atkCorrection">${correctionOptions(damageState.atkCorrection)}</select></div>
         <div class="damage-field"><label>能力ランク</label><select data-damage="atkBoost">${Array.from({length:13},(_,i)=>i-6).map(v=>`<option value="${v}" ${Number(damageState.atkBoost)===v?"selected":""}>${v>0?"+":""}${v}</option>`).join("")}</select></div>
@@ -1229,11 +1277,11 @@ function damageCalcHtml(pagePokemon){
       </div>
       <div class="damage-card"><h2>防御側</h2>
         <div class="damage-side-head">
-          <div class="damage-field"><label>ポケモン</label><select data-damage="defender">${POKEMON.map(x=>`<option value="${x.name}" ${x.name===defender.name?"selected":""}>${x.name}</option>`).join("")}</select></div>
           ${damageBaseStatsHtml(defender)}
+          <div class="damage-field"><label>ポケモン</label><select data-damage="defender">${POKEMON.map(x=>`<option value="${x.name}" ${x.name===defender.name?"selected":""}>${x.name}</option>`).join("")}</select></div>
         </div>
         <div class="damage-field"><label>特性</label><select data-damage="defenderAbility">${abilityOptions(defender,damageState.defenderAbility)}</select></div>
-        <div class="damage-field"><label>持ち物</label><select data-damage="defenderItem">${itemOptions(damageState.defenderItem,"def")}</select></div>
+        <div class="damage-field"><label>持ち物</label><select data-damage="defenderItem">${itemOptions(damageState.defenderItem,"def")}</select></div><div class="item-help">${itemHelp(damageState.defenderItem)}</div>
         <div class="point-grid">
           <div class="point-item"><label><span>HP</span><span>0～32</span></label><input data-damage="defHpPoints" type="range" min="0" max="32" value="${damageState.defHpPoints}"><div class="range-value">${damageState.defHpPoints} / 32</div></div>
           <div class="point-item"><label><span>${physical?"防御":"特防"}</span><span>0～32</span></label><input data-damage="defPoints" type="range" min="0" max="32" value="${damageState.defPoints}"><div class="range-value">${damageState.defPoints} / 32</div></div>
@@ -1244,12 +1292,17 @@ function damageCalcHtml(pagePokemon){
         <div class="point-total">HP：${hp}　${physical?"防御":"特防"}：${defValue}</div>
       </div>
     </div>
-    <div class="damage-card"><h2>場・補正</h2>
+    <div class="damage-card"><h2>場の状態</h2>
       <div class="damage-section-label">天候</div><div class="choice-row">
         ${[["none","なし"],["sun","はれ"],["rain","あめ"],["sand","すな"],["snow","ゆき"]].map(([v,l])=>`<label class="choice-pill"><input data-damage="weather" type="radio" name="damage-weather" value="${v}" ${damageState.weather===v?"checked":""}>${l}</label>`).join("")}
       </div><div class="choice-help">${weatherHelp}</div>
       <div class="damage-section-label">フィールド</div><div class="choice-row">
         ${[["none","なし"],["electric","エレキ"],["psychic","サイコ"],["grassy","グラス"],["misty","ミスト"]].map(([v,l])=>`<label class="choice-pill"><input data-damage="terrain" type="radio" name="damage-terrain" value="${v}" ${damageState.terrain===v?"checked":""}>${l}</label>`).join("")}
+      </div>
+      <div class="damage-section-label">設置技</div>
+      <div class="damage-options"><label class="damage-check"><input data-damage="stealthRock" type="checkbox" ${damageState.stealthRock?"checked":""}>ステルスロック</label></div>
+      <div class="damage-section-label">まきびし</div><div class="choice-row">
+        ${[["0","なし"],["1","1回（1/8）"],["2","2回（1/6）"],["3","3回（1/4）"]].map(([v,l])=>`<label class="choice-pill"><input data-damage="spikes" type="radio" name="damage-spikes" value="${v}" ${Number(damageState.spikes)===Number(v)?"checked":""}>${l}</label>`).join("")}
       </div>
       <div class="damage-section-label">その他</div><div class="damage-options">
         <label class="damage-check"><input data-damage="gravity" type="checkbox" ${damageState.gravity?"checked":""}>じゅうりょく</label>
@@ -1257,7 +1310,8 @@ function damageCalcHtml(pagePokemon){
         <label class="damage-check"><input data-damage="helpingHand" type="checkbox" ${damageState.helpingHand?"checked":""}>てだすけ</label>
         <label class="damage-check"><input data-damage="spread" type="checkbox" ${damageState.spread?"checked":""}>全体技補正（0.75倍）</label>
         <label class="damage-check"><input data-damage="reflect" type="checkbox" ${damageState.reflect?"checked":""}>${physical?"リフレクター":"ひかりのかべ"}</label>
-      </div><div class="choice-help">じゅうりょく：ひこうタイプ・特性「ふゆう」にも、じめんタイプの技が当たります。</div>
+        <label class="damage-check"><input data-damage="burn" type="checkbox" ${damageState.burn?"checked":""}>やけど（物理技0.5倍）</label>
+      </div><div class="choice-help">じゅうりょく／くろいてっきゅう：ひこうタイプ・特性「ふゆう」にも、じめんタイプの技が当たります。</div>
     </div>
     <div class="damage-result">
       <div class="damage-result-main">${damageState.move}：${min}～${max}ダメージ</div>
@@ -1265,10 +1319,10 @@ function damageCalcHtml(pagePokemon){
         <div class="damage-result-cell"><span class="label">割合</span><strong>${minPct.toFixed(1)}～${maxPct.toFixed(1)}%</strong></div>
         <div class="damage-result-cell"><span class="label">判定</span><strong>${ko}</strong></div>
         <div class="damage-result-cell"><span class="label">タイプ相性</span><strong>${typeText}</strong></div>
-        <div class="damage-result-cell"><span class="label">乱数</span><strong>16段階</strong></div>
+        <div class="damage-result-cell"><span class="label">攻撃前</span><strong>${hpBeforeAttack}/${hp}</strong></div>
       </div>
-      <div class="damage-bar"><span style="width:${Math.min(100,maxPct)}%"></span></div>
-      <div class="damage-note">乱数：${rolls.join(", ")}<br>能力ポイントは各能力0～32、合計66。天候・フィールド・じゅうりょく・主要な特性と持ち物・全体技補正・壁などを計算に反映します。</div>
+      <div class="hp-gauge"><div class="hp-gauge-fill ${gaugeClass}" style="width:${Math.max(0,Math.min(100,remainWorstPct))}%"></div><div class="hp-gauge-text">残りHP ${remainWorstPct.toFixed(1)}～${remainBestPct.toFixed(1)}%（${remainWorst}～${remainBest}/${hp}）</div></div>
+      <div class="damage-note">${entryText}<br>乱数：${rolls.join(", ")}<br>能力ポイントは各能力0～32、合計66。主要な場・特性・持ち物補正を反映します。</div>
     </div>
   </section>`;
 }
