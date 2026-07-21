@@ -1492,7 +1492,7 @@ function renderStatusTable(p){
 }
 
 function damageBaseStatsHtml(p){
-  return `<div class="damage-base-stats"><div class="damage-base-stats-title">ステータス（実数値）</div><div class="damage-base-stats-grid">${Object.entries(p.stats).map(([k,v])=>`<div class="damage-base-stat"><span class="label">${statLabels[k]}</span><strong>${p.name==="ヌケニン"&&k==="hp"?1:v+(k==="hp"?75:20)}</strong></div>`).join("")}</div></div>`;
+  return `<div class="damage-base-stats"><div class="damage-base-stats-title">ステータス（無振の実数値）</div><div class="damage-base-stats-grid">${Object.entries(p.stats).map(([k,v])=>`<div class="damage-base-stat"><span class="label">${statLabels[k]}</span><strong>${p.name==="ヌケニン"&&k==="hp"?1:v+(k==="hp"?75:20)}</strong></div>`).join("")}</div></div>`;
 }
 
 function isMegaPokemon(p){return Boolean(p&&p.name.startsWith("メガ")&&p.name!=="メガニウム")}
@@ -1735,7 +1735,7 @@ function damageCalcHtml(pagePokemon){
   const gaugeClass=remainWorstPct<=20?"hp-red":remainWorstPct<=50?"hp-yellow":"";
   const entryText=entryDamage?`場のダメージ：${entryDamage}（攻撃前HP ${hpBeforeAttack}/${hp}）`:`攻撃前HP：${hp}/${hp}`;
   return `<section class="damage-calculator">
-    <div class="damage-calculator-head"><button id="damageSwapButton" class="damage-swap-button" type="button" title="攻撃側と防御側の設定を入れ替える">⇄ 攻防交代</button><div class="damage-head-actions"><button id="damageResetButton" class="damage-reset-button" type="button">リセット</button></div></div>
+    <div class="damage-calculator-head"><button id="damageSwapButton" class="damage-swap-button" type="button" title="攻撃側と防御側のポケモンを入れ替える">⇄ 攻防交代</button><div class="damage-head-actions"><button id="damageResetButton" class="damage-reset-button" type="button">リセット</button></div></div>
     <div class="damage-columns">
       <div class="damage-card"><h2>攻撃側</h2>
         <div class="damage-side-head">
@@ -1906,7 +1906,7 @@ function bindDamageControls(){
 function renderDetail(){
   const p=POKEMON.find(x=>x.name===selected)||POKEMON[0];if(!p)return;
   if(viewMode==="damage"){
-    detailEl.innerHTML=`<div class="head"><div><h2 class="name">ダメージ計算</h2><div class="help">攻撃側・防御側のポケモンを自由に選択できます。</div></div><button id="damageBackButton" class="list-toggle" type="button">ポケモン検索へ戻る</button></div>${damageCalcHtml(p)}<div class="footer">ポケモン検索とは独立したダメージ計算専用ページです。攻撃側・防御側のステータス（実数値）を選択欄の横で確認できます。</div>`;
+    detailEl.innerHTML=`<div class="head"><div><h2 class="name">ダメージ計算</h2><div class="help">攻撃側・防御側のポケモンを自由に選択できます。</div></div><button id="damageBackButton" class="list-toggle" type="button">ポケモン検索へ戻る</button></div>${damageCalcHtml(p)}<div class="footer">ポケモン検索とは独立したダメージ計算専用ページです。攻撃側・防御側のステータス（無振の実数値）を選択欄の横で確認できます。</div>`;
     document.getElementById("damageBackButton")?.addEventListener("click",()=>{viewMode="database";render()});
     bindDamageControls();
     return;
