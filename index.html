@@ -260,6 +260,12 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 .point-item{border:1px solid var(--line);border-radius:7px;background:#fff;padding:5px}
 .point-item label{display:flex;justify-content:space-between;gap:4px;font-size:.68rem;color:var(--muted);margin-bottom:3px}
 .point-item input{padding:0;border:0;border-radius:6px}.damage-field input[type="range"],.point-item input[type="range"]{width:100%;accent-color:var(--accent)}.range-value{text-align:right;font-size:.66rem;font-weight:800;color:var(--muted);margin-top:2px}
+.point-adjust-row{display:grid;grid-template-columns:34px minmax(0,1fr) 34px;gap:5px;align-items:center;margin-top:4px}
+.point-adjust-button{width:34px;height:34px;border:1px solid #aebbd0;border-radius:8px;background:#f7f9fc;color:#174da8;font-size:1.05rem;font-weight:950;line-height:1;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.point-adjust-button:hover{background:#eaf1ff;border-color:#7f9fd7}.point-adjust-button:active,.point-adjust-button.holding{background:var(--accent);border-color:var(--accent);color:#fff;transform:translateY(1px)}
+.point-adjust-button:disabled{opacity:.38;cursor:not-allowed;transform:none;background:#f3f4f6;color:#7b8493;border-color:#d6dbe4}
+.point-adjust-value{display:flex;align-items:center;justify-content:center;min-height:34px;border:1px solid #d8e0ec;border-radius:8px;background:#fff;font-size:.82rem;font-weight:900;color:#26344d;font-variant-numeric:tabular-nums}
+@media(max-width:520px){.point-adjust-row{grid-template-columns:40px minmax(0,1fr) 40px;gap:6px}.point-adjust-button{width:40px;height:40px;font-size:1.2rem}.point-adjust-value{min-height:40px;font-size:.9rem}}
 .point-total{margin-top:7px;padding:6px 8px;border-radius:7px;background:var(--soft);font-size:.72rem;font-weight:800}
 .point-total.over{background:#fff0f0;color:#b42318}
 .damage-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
@@ -1609,6 +1615,11 @@ function resetDamageConditions(){
     triggerAbilityActive:false
   });
 }
+function pointControlHtml(label,key,value){
+  const safeValue=Math.max(0,Math.min(32,Number(value)||0));
+  return `<div class="point-item"><label><span>${label}</span><span>0～32</span></label><input data-damage="${key}" type="range" min="0" max="32" step="1" value="${safeValue}" aria-label="${label}の能力ポイント"><div class="point-adjust-row"><button class="point-adjust-button" type="button" data-point-key="${key}" data-point-step="-1" aria-label="${label}を1ポイント下げる" ${safeValue<=0?"disabled":""}>−</button><div class="point-adjust-value" aria-live="polite">${safeValue} / 32</div><button class="point-adjust-button" type="button" data-point-key="${key}" data-point-step="1" aria-label="${label}を1ポイント上げる" ${safeValue>=32?"disabled":""}>＋</button></div></div>`;
+}
+
 function damageCalcHtml(pagePokemon){
   if(!POKEMON.some(p=>p.name===damageState.attacker))damageState.attacker=pagePokemon.name;
   const attacker=POKEMON.find(p=>p.name===damageState.attacker)||pagePokemon;
@@ -1747,7 +1758,7 @@ function damageCalcHtml(pagePokemon){
         <div class="damage-field"><label>特性</label><select data-damage="attackerAbility">${abilityOptions(attacker,damageState.attackerAbility,"atk")}</select></div>
         ${conditionalAbilityControlHtml(damageState.attackerAbility)}
         <div class="damage-field"><label>持ち物</label><select data-damage="attackerItem">${itemOptions(damageState.attackerItem,"atk")}</select></div><div class="item-help">${itemHelp(damageState.attackerItem)}</div>
-        <div class="ability-points-heading"><span>能力ポイント</span><small>0～32</small></div><div class="point-grid attack-point-grid"><div class="point-item"><label><span>${physical?"攻撃":"特攻"}</span><span>0～32</span></label><input data-damage="atkPoints" type="range" min="0" max="32" value="${damageState.atkPoints}"><div class="range-value">${damageState.atkPoints} / 32</div></div></div>
+        <div class="ability-points-heading"><span>能力ポイント</span><small>0～32</small></div><div class="point-grid attack-point-grid">${pointControlHtml(physical?"攻撃":"特攻","atkPoints",damageState.atkPoints)}</div>
         <div class="damage-field"><label>能力補正</label>${correctionChoiceHtml("atkCorrection",damageState.atkCorrection)}</div>
         <div class="damage-field"><label>能力ランク</label>${rankChoiceHtml("atkBoost",damageState.atkBoost)}</div>
         <div class="point-total">${physical?"攻撃":"特攻"}：${atkValue}</div>
@@ -1761,8 +1772,8 @@ function damageCalcHtml(pagePokemon){
         <div class="damage-field"><label>特性</label><select data-damage="defenderAbility">${abilityOptions(defender,damageState.defenderAbility,"def")}</select></div>
         <div class="damage-field"><label>持ち物</label><select data-damage="defenderItem">${itemOptions(damageState.defenderItem,"def")}</select></div><div class="item-help">${itemHelp(damageState.defenderItem)}</div>
         <div class="ability-points-heading"><span>能力ポイント</span><small>各能力 0～32</small></div><div class="point-grid">
-          <div class="point-item"><label><span>HP</span><span>0～32</span></label><input data-damage="defHpPoints" type="range" min="0" max="32" value="${damageState.defHpPoints}"><div class="range-value">${damageState.defHpPoints} / 32</div></div>
-          <div class="point-item"><label><span>${physical?"防御":"特防"}</span><span>0～32</span></label><input data-damage="defPoints" type="range" min="0" max="32" value="${damageState.defPoints}"><div class="range-value">${damageState.defPoints} / 32</div></div>
+          ${pointControlHtml("HP","defHpPoints",damageState.defHpPoints)}
+          ${pointControlHtml(physical?"防御":"特防","defPoints",damageState.defPoints)}
         </div>
         <div class="damage-field"><label>能力補正</label>${correctionChoiceHtml("defCorrection",damageState.defCorrection)}</div>
         <div class="damage-field"><label>能力ランク</label>${rankChoiceHtml("defBoost",damageState.defBoost)}</div>
@@ -1845,6 +1856,9 @@ function swapDamageSides(){
   });
 }
 
+let pointHoldDelayTimer=null;
+let pointHoldRepeatTimer=null;
+
 function bindDamageControls(){
   document.getElementById("damageSwapButton")?.addEventListener("click",()=>{
     swapDamageSides();
@@ -1874,6 +1888,47 @@ function bindDamageControls(){
     }
     renderDetail();
   }));
+  detailEl.querySelectorAll("[data-point-key]").forEach(button=>{
+    const changePoint=()=>{
+      const key=button.dataset.pointKey;
+      const step=Number(button.dataset.pointStep)||0;
+      const current=Math.max(0,Math.min(32,Number(damageState[key])||0));
+      const next=Math.max(0,Math.min(32,current+step));
+      if(next===current)return false;
+      damageState[key]=next;
+      renderDetail();
+      return next>0&&next<32;
+    };
+    const stopHold=()=>{
+      clearTimeout(pointHoldDelayTimer);
+      clearInterval(pointHoldRepeatTimer);
+      pointHoldDelayTimer=null;
+      pointHoldRepeatTimer=null;
+      button.classList.remove("holding");
+    };
+    button.addEventListener("pointerdown",event=>{
+      if(button.disabled||event.button>0)return;
+      event.preventDefault();
+      stopHold();
+      button.classList.add("holding");
+      changePoint();
+      pointHoldDelayTimer=setTimeout(()=>{
+        pointHoldRepeatTimer=setInterval(()=>{
+          if(!changePoint())stopHold();
+        },85);
+      },380);
+      window.addEventListener("pointerup",stopHold,{once:true});
+      window.addEventListener("pointercancel",stopHold,{once:true});
+      window.addEventListener("blur",stopHold,{once:true});
+    });
+    button.addEventListener("keydown",event=>{
+      if((event.key==="Enter"||event.key===" ")&&!event.repeat){
+        event.preventDefault();
+        changePoint();
+      }
+    });
+    button.addEventListener("contextmenu",event=>event.preventDefault());
+  });
   detailEl.querySelectorAll("[data-mega-side]").forEach(button=>button.addEventListener("click",()=>{
     const side=button.dataset.megaSide;
     damageState[side]=button.dataset.megaValue;
