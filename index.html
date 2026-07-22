@@ -325,6 +325,8 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 .pokemon-type-badges{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .pokemon-type-badges .type-badge{min-width:48px;padding:2px 7px;font-size:.66rem}
 
+.damage-result-matchup{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;padding:7px 9px;border:1px solid #d8c8f2;border-radius:8px;background:rgba(255,255,255,.72);font-size:.76rem;font-weight:900}
+.damage-result-pokemon{display:inline-flex;align-items:center;gap:5px}.damage-result-side-label{color:var(--muted);font-size:.64rem}.damage-result-arrow{color:#6e45b8;font-size:1rem;font-weight:950}
 .damage-result-main{font-size:1.1rem;font-weight:900;margin-bottom:5px}
 .damage-result-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
 .damage-result-cell{border:1px solid #d4e0f7;border-radius:7px;background:#fff;padding:6px;text-align:center}
@@ -1913,6 +1915,11 @@ function damageCalcHtml(pagePokemon){
       </div><div class="choice-help">じゅうりょく／くろいてっきゅう：ひこうタイプ・特性「ふゆう」にも、じめんタイプの技が当たります。<br>急所：通常1.5倍。特性「スナイパー」では2.25倍。攻撃側の攻撃・特攻ダウン、防御側の防御・特防アップ、リフレクター・ひかりのかべを無視します。やけどによる物理技半減は無視しません。</div>
     </div>
     <div class="damage-result">
+      <div class="damage-result-matchup">
+        <span class="damage-result-pokemon"><span class="damage-result-side-label">攻撃側</span>${attacker.name}</span>
+        <span class="damage-result-arrow" aria-hidden="true">→</span>
+        <span class="damage-result-pokemon"><span class="damage-result-side-label">防御側</span>${defender.name}</span>
+      </div>
       <div class="damage-result-main">${damageState.move}：与ダメージ量 ${min}～${max}</div>
       <div class="damage-result-grid">
         <div class="damage-result-cell"><span class="label">与ダメージ割合</span><strong>${minPct.toFixed(1)}～${maxPct.toFixed(1)}%</strong></div>
